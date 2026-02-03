@@ -5,47 +5,61 @@
 const Q = '["\']';  // Simple quote class
 const NQ = '[^"\']'; // Negated quote class
 
+// Common patterns extracted to reduce complexity
+const SUBJ_IT_THEY = '(?:it|they)';
+const SUBJ_IT_THEY_CAP = '(?:[Ii]t|[Tt]hey)';
+const VERB_BE_PAST = '(?:was|were)';
+const VERB_BE_PRES = '(?:is|are)';
+const VERB_BE_ALL = '(?:was|were|is|are)';
+const VERB_BE_CONTR = "(?:'s|'re)";
+const NEG_CONTR = "(?:wasn't|weren't|isn't|aren't)";
+const NEG_CONTR_EXT = "(?:wasn't|weren't|isn't|aren't|don't|doesn't)";
+const EMPH_MARK = '[*_~]?';
+
 // 1. "doesn't VERB. It VERB"
-export const RE_POS_DOESNT_VERB = new RegExp(`${Q}\\s*(?:[Tt]he\\s+\\w+|[Ii]t|[Tt]hey|[Yy]ou)\\s+doesn't\\s+VERB[^.!?]*?[.!?]\\s*(?:it|they|you|that)\\s+[*_~]?(?:VERB|whispers?|reminds?|signals?|tests?|speaks?)`, 'gi');
+export const RE_POS_DOESNT_VERB = new RegExp(`${Q}\\s*(?:[Tt]he\\s+\\w+|[Ii]t|[Tt]hey|[Yy]ou)\\s+doesn't\\s+VERB[^.!?]*?[.!?]\\s*(?:it|they|you|that)\\s+${EMPH_MARK}(?:VERB|whispers?|reminds?|signals?|tests?|speaks?)`, 'gi');
 
 // 2. "don't just VERB. They VERB"
-export const RE_POS_DONT_JUST_VERB = new RegExp(`${Q}\\s*(?:[Tt]hey|[Yy]ou|[Ii]t)\\s+don't\\s+just\\s+VERB[^.!?]*?[—-]\\s*they\\s+[*_~]?VERB`, 'gi');
+export const RE_POS_DONT_JUST_VERB = new RegExp(`${Q}\\s*(?:[Tt]hey|[Yy]ou|[Ii]t)\\s+don't\\s+just\\s+VERB[^.!?]*?[—-]\\s*they\\s+${EMPH_MARK}VERB`, 'gi');
 
 // 3. "not just VERBing. VERBing"
-export const RE_POS_GERUND_FRAGMENT = new RegExp(`${Q}\\s*Not\\s+just\\s+VERB[.!?]\\s+[*_~]?VERB[.!?]`, 'g');
+export const RE_POS_GERUND_FRAGMENT = new RegExp(`${Q}\\s*Not\\s+just\\s+VERB[.!?]\\s+${EMPH_MARK}VERB[.!?]`, 'g');
 
-// 4. "not ADJ. They were ADJ"
-export const RE_POS_NOT_ADJ = /\bnot\s+(random|passive|simple|normal)[.!?;]\s+(?:[Tt]hey|[Ii]t)\s+(?:were|was|are|is|'re|'s)\s+[*_~]?(intentional|active|complex|different|\w{8,})/gi;
+// 4. "not ADJ. They were ADJ" - simplified with extracted constants
+const ADJ_LIST_NEG = '(?:random|passive|simple|normal)';
+const ADJ_LIST_POS = '(?:intentional|active|complex|different|\\w{8,})';
+export const RE_POS_NOT_ADJ = new RegExp(`\\bnot\\s+${ADJ_LIST_NEG}[.!?;]\\s+${SUBJ_IT_THEY_CAP}\\s+(?:${VERB_BE_PAST}|${VERB_BE_PRES}|${VERB_BE_CONTR})\\s+${EMPH_MARK}${ADJ_LIST_POS}`, 'gi');
 
-// 5. Broader dash pattern with VERB
-export const RE_POS_DASH_VERB = /\b(?:wasn't|weren't|isn't|aren't)\s+just\s+(?:VERB|a\s+\w+)[^-]{0,30}?-\s*(?:it|they)\s+(?:was|were|is|are|'s|'re)\s+[*_~]?(?:VERB|a\s+[*_~]?\w+)/gi;
+// 5. Broader dash pattern with VERB - simplified
+export const RE_POS_DASH_VERB = new RegExp(`\\b${NEG_CONTR}\\s+just\\s+(?:VERB|a\\s+\\w+)[^-]{0,30}?-\\s*${SUBJ_IT_THEY}\\s+(?:${VERB_BE_ALL}|${VERB_BE_CONTR})\\s+${EMPH_MARK}(?:VERB|a\\s+${EMPH_MARK}\\w+)`, 'gi');
 
-// 6. "not just VERB. It was VERB"
-export const RE_POS_NOT_JUST_VERB_PAST = /\b(?:was|were)\s+not\s+just\s+(?:VERB|a\s+\w+)[.!?]\s+(?:[Ii]t|[Tt]hey)\s+(?:was|were)\s+[*_~]?(?:VERB|a\s+[*_~]?\w+)/gi;
+// 6. "not just VERB. It was VERB" - simplified
+export const RE_POS_NOT_JUST_VERB_PAST = new RegExp(`\\b${VERB_BE_PAST}\\s+not\\s+just\\s+(?:VERB|a\\s+\\w+)[.!?]\\s+${SUBJ_IT_THEY_CAP}\\s+${VERB_BE_PAST}\\s+${EMPH_MARK}(?:VERB|a\\s+${EMPH_MARK}\\w+)`, 'gi');
 
-// 7. Colon separator pattern
-export const RE_POS_COLON_VERB = /:\s+(?:the\s+\w+|it|they)\s+(?:was|were)\s+not\s+just\s+VERB[.!?]\s+(?:[Ii]t|[Tt]hey)\s+(?:was|were)\s+[*_~]?VERB/gi;
+// 7. Colon separator pattern - simplified
+export const RE_POS_COLON_VERB = new RegExp(`:\\s+(?:the\\s+\\w+|it|they)\\s+${VERB_BE_PAST}\\s+not\\s+just\\s+VERB[.!?]\\s+${SUBJ_IT_THEY_CAP}\\s+${VERB_BE_PAST}\\s+${EMPH_MARK}VERB`, 'gi');
 
 // 8. Same verb lemma - matches specific verb lemmas appearing twice
-export const RE_LEMMA_SAME_VERB = /\b(REACT|SPEAK|LISTEN|LEARN|SIGNAL|WARN|DIE|LIVE|TEST|TEACH|AMPLIFY|INTERPRET|TRANSLATE|DECODE|EMIT)\b[^.!?]{5,80}?[.!?;—-]\s*[^.!?]{0,40}?\b\1\b/gi;
+const VERB_LEMMAS = '(?:REACT|SPEAK|LISTEN|LEARN|SIGNAL|WARN|DIE|LIVE|TEST|TEACH|AMPLIFY|INTERPRET|TRANSLATE|DECODE|EMIT)';
+export const RE_LEMMA_SAME_VERB = new RegExp(`\\b(${VERB_LEMMAS})\\b[^.!?]{5,80}?[.!?;—-]\\s*[^.!?]{0,40}?\\b\\1\\b`, 'gi');
 
 // 9. "isn't just VERB" within quotes
-export const RE_POS_ISNT_JUST_VERB = new RegExp(`${Q}\\s*(?:${NQ}{0,100}?\\b)?(?:The\\s+\\w+|It|They|You)\\s+(?:isn't|aren't|wasn't|weren't)\\s+just\\s+VERB${NQ}{0,40}?[—-]\\s*(?:it's|they're)\\s+[*_~]?VERB`, 'gi');
+export const RE_POS_ISNT_JUST_VERB = new RegExp(`${Q}\\s*(?:${NQ}{0,100}?\\b)?(?:The\\s+\\w+|It|They|You)\\s+(?:isn't|aren't|wasn't|weren't)\\s+just\\s+VERB${NQ}{0,40}?[—-]\\s*(?:it's|they're)\\s+${EMPH_MARK}VERB`, 'gi');
 
 // 10. Complex multi-sentence in quotes with VERB
-export const RE_POS_QUOTE_MULTI_VERB = new RegExp(`${Q}\\s*${NQ}{0,150}?\\b(?:not\\s+just|isn't|aren't)\\s+(?:VERB|a\\s+\\w+)${NQ}{0,60}?[.!?]\\s+(?:${NQ}{0,40}?\\b)?(?:It's|They're|You're|That's)\\s+[*_~]?(?:VERB|a\\s+[*_~]?\\w+)`, 'gi');
+export const RE_POS_QUOTE_MULTI_VERB = new RegExp(`${Q}\\s*${NQ}{0,150}?\\b(?:not\\s+just|isn't|aren't)\\s+(?:VERB|a\\s+\\w+)${NQ}{0,60}?[.!?]\\s+(?:${NQ}{0,40}?\\b)?(?:It's|They're|You're|That's)\\s+${EMPH_MARK}(?:VERB|a\\s+${EMPH_MARK}\\w+)`, 'gi');
 
 // 11. Ellipsis with VERB
-export const RE_POS_ELLIPSIS_VERB = new RegExp(`${Q}\\s*${NQ}{0,100}?\\b(?:not\\s+just|isn't)\\s+VERB${NQ}{0,30}?[.…]\\s*[.…]\\s*(?:they're|it's|you're)\\s+[*_~]?VERB`, 'gi');
+export const RE_POS_ELLIPSIS_VERB = new RegExp(`${Q}\\s*${NQ}{0,100}?\\b(?:not\\s+just|isn't)\\s+VERB${NQ}{0,30}?[.…]\\s*[.…]\\s*(?:they're|it's|you're)\\s+${EMPH_MARK}VERB`, 'gi');
 
 // 12. "not NOUN. It's/That's a NOUN"
-export const RE_POS_NOT_NOUN = new RegExp(`${Q}\\s*(?:That's|It's)\\s+not\\s+(?:a\\s+)?(sign|message|warning|pattern|test|phenomenon|one\\s+\\w+)[.!?]\\s+(?:That's|It's)\\s+(?:a\\s+|\\*?all\\s+)?[*_~]?(warning|question|language|symbol|test|presence|story|challenge|\\w+)`, 'gi');
+export const RE_POS_NOT_NOUN = new RegExp(`${Q}\\s*(?:That's|It's)\\s+not\\s+(?:a\\s+)?(?:sign|message|warning|pattern|test|phenomenon|one\\s+\\w+)[.!?]\\s+(?:That's|It's)\\s+(?:a\\s+|\\*?all\\s+)?${EMPH_MARK}(?:warning|question|language|symbol|test|presence|story|challenge|\\w+)`, 'gi');
 
 // 13. "doesn't VERB. It *VERB" with emphasis
 export const RE_POS_DOESNT_VERB_EMPHASIS = new RegExp(`${Q}\\s*(?:The\\s+\\w+|It|They)\\s+doesn't\\s+(?:VERB|react|warn|speak)[.!?]\\s+It\\s+\\*(?:VERB|whispers?|reminds?|signals?)`, 'gi');
 
-// 14. Better dash patterns with VERB
-export const RE_POS_DASH_VERB_BROAD = /\b(?:wasn't|weren't|isn't|aren't|don't|doesn't)\s+just\s+(?:VERB|(?:the|a)\s+\w+)[^-]{0,40}?-\s*(?:it|they)\s+(?:was|were|is|are|'s|'re)?\s*[*_~]?(?:VERB|(?:the|a)\s+[*_~]?\w+)/gi;
+// 14. Better dash patterns with VERB - simplified with extracted constants
+export const RE_POS_DASH_VERB_BROAD = new RegExp(`\\b${NEG_CONTR_EXT}\\s+just\\s+(?:VERB|(?:the|a)\\s+\\w+)[^-]{0,40}?-\\s*${SUBJ_IT_THEY}\\s+(?:${VERB_BE_ALL}|${VERB_BE_CONTR})?\\s*${EMPH_MARK}(?:VERB|(?:the|a)\\s+${EMPH_MARK}\\w+)`, 'gi');
 
 // 15. Ellipsis patterns - broader
 export const RE_POS_ELLIPSIS_BROAD = new RegExp(`${Q}\\s*(?:${NQ}{0,100}?\\b)?(?:They're|You're|This)\\s+(?:not\\s+just|isn't)\\s+(?:VERB|a\\s+\\w+)${NQ}{0,40}?[.…]\\s*[.…]\\s*(?:they're|it's|you're|this)\\s+(?:VERB|a\\s+\\w+)`, 'gi');
@@ -62,8 +76,8 @@ export const RE_POS_QUOTE_VERBING = new RegExp(`${Q}\\s*(?:You're|They're|It's)\
 // 19. "doesn't verb. It *verb*" literal
 export const RE_POS_DOESNT_LITERAL = new RegExp(`${Q}\\s*(?:The\\s+\\w+|It|They)\\s+doesn't\\s+(?:VERB|react|warn|speak|listen)\\s*[.!?]\\s+It\\s+\\*\\w+\\*`, 'gi');
 
-// 20. "not just a NOUN—it was a *NOUN*"
-export const RE_POS_DASH_NOUN_SWAP = /\b(?:was|were|is|are)\s+not\s+just\s+a\s+\w+[^-]{0,10}?-\s*(?:it|they)\s+(?:was|were|is|are)\s+(?:a\s+)?\*\w+\*/gi;
+// 20. "not just a NOUN—it was a *NOUN*" - simplified with extracted constants
+export const RE_POS_DASH_NOUN_SWAP = new RegExp(`\\b${VERB_BE_ALL}\\s+not\\s+just\\s+a\\s+\\w+[^-]{0,10}?-\\s*${SUBJ_IT_THEY}\\s+${VERB_BE_ALL}\\s+(?:a\\s+)?\\*\\w+\\*`, 'gi');
 
 // 21. "isn't just VERB/noun—it's VERBing/noun"
 export const RE_POS_ISNT_DASH_EMPHASIS = new RegExp(`${Q}\\s*(?:The\\s+\\w+|It|They)\\s+(?:isn't|aren't|wasn't|weren't)\\s+just\\s+(?:VERB|a\\s+\\w+)[^-]{0,40}?-\\s*(?:it's|they're)\\s+\\*\\w+\\*`, 'gi');
@@ -90,7 +104,7 @@ export const RE_POS_DASH_GERUND_OBJ = new RegExp(`${Q}\\s*(?:They're|You're|It's
 export const RE_POS_ELLIPSIS_DIALOGUE = new RegExp(`${Q}\\s*(?:They're|You're|It's)\\s+not\\s+just\\s+VERB,"\\s+${NQ}{5,40}?\\.\\s+"(?:They're|You're|It's)[…\\s]+(?:VERB|\\w+ing)`, 'gi');
 
 // 29. "were not just NOUN; they were NOUN"
-export const RE_POS_SEMI_NOUN = /\b(?:were|was|are|is)\s+not\s+just\s+(?:folklore|\w+);\s+(?:they|it)\s+(?:were|was|are|is)\s+a\s+\w+/gi;
+export const RE_POS_SEMI_NOUN = new RegExp(`\\b${VERB_BE_ALL}\\s+not\\s+just\\s+(?:folklore|\\w+);\\s+${SUBJ_IT_THEY}\\s+${VERB_BE_ALL}\\s+a\\s+\\w+`, 'gi');
 
 // 30. "isn't just a NOUN. It's a *NOUN*" with adj
 export const RE_POS_ISNT_ADJ_NOUN = new RegExp(`${Q}\\s*(?:${NQ}{0,30}?\\b)?(?:this|that|it)\\s+isn't\\s+just\\s+a\\s+(?:natural\\s+)?\\w+[.!?]\\s+It's\\s+(?:a\\s+)?\\*\\w+\\*`, 'gi');
