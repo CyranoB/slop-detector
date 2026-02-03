@@ -2,27 +2,27 @@
 
 ![SLOP Score Detector](assets/header.png)
 
-AI-generated text detection tool using the EQBench SLOP score algorithm.
+Detect AI-generated text by analyzing writing patterns. Returns a 0-100 score where higher = more AI-like.
 
-## Quick Start (MCP Server)
-
-Run the MCP server via npx (no installation required):
+## Quick Start
 
 ```bash
 npx -y slop-detector
 ```
 
-**Add to Claude Code:**
+This starts an MCP server. Add it to your AI assistant:
+
+**Claude Code:**
 ```bash
 claude mcp add slop-detector -- npx -y slop-detector
 ```
 
-**Add to Codex:**
+**Codex:**
 ```bash
 codex mcp add slop-detector -- npx -y slop-detector
 ```
 
-**Add to Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+**Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 ```json
 {
   "mcpServers": {
@@ -34,107 +34,57 @@ codex mcp add slop-detector -- npx -y slop-detector
 }
 ```
 
-## What is SLOP Score?
+## What It Detects
 
-SLOP (Shitty LLM Output Patterns) is a 0-100 metric that measures how "AI-like" text appears:
+| Component | Weight | What it finds |
+|-----------|--------|---------------|
+| **Slop Words** | 60% | Overused words like *delve*, *tapestry*, *paradigm*, *leverage* |
+| **Contrast Patterns** | 25% | "Not X but Y" structures that LLMs love |
+| **Trigrams** | 15% | Common 3-word phrases like "it is important" |
 
-- **0-20**: Very human-like, natural writing
-- **20-40**: Mostly human with some AI characteristics
-- **40-60**: Mixed characteristics, unclear origin
-- **60-80**: Likely AI-generated with some editing
-- **80-100**: Strong AI signature, minimal human intervention
+## Score Interpretation
 
-> **Note:** Scores above 30 are suspiciously AI-like and warrant attention.
+| Score | Meaning |
+|-------|---------|
+| 0-20 | Human-like writing |
+| 20-40 | Mostly human, some AI patterns |
+| 40-60 | Mixed, unclear origin |
+| 60-80 | Likely AI-generated |
+| 80-100 | Strong AI signature |
 
-## How It Works
-
-The algorithm combines three components with weighted scoring:
-
-```
-Final Score = (Word Score × 60%) + (Contrast Patterns × 25%) + (Trigram Score × 15%)
-```
-
-1. **Word Score (60%)**: Detects overuse of "slop words" like *delve*, *tapestry*, *paradigm*, *leverage*
-2. **Contrast Patterns (25%)**: Finds "not X but Y" structures using regex + POS tagging
-3. **Trigram Score (15%)**: Catches common 3-word phrases like "it is important", "to note that"
-
-## Installation
-
-```bash
-npm install
-npm run build
-```
+> **Rule of thumb:** Scores above 30 are suspicious.
 
 ## Usage
+
+### As an MCP Tool
+
+The `score_text` tool accepts text and returns:
+- `slopScore`: 0-100 score
+- `wordCount`, `charCount`: Text statistics  
+- `metrics`: Detailed breakdown (words/trigrams/patterns per 1k)
 
 ### Command Line
 
 ```bash
-# Score a file
-npm run score article.txt
+# Install and build
+npm install && npm run build
 
-# Or use the built binary directly
+# Score a file
 node dist/cli.js article.txt
 
 # Score from stdin
-cat blog-post.md | node dist/cli.js -
-echo "Let's delve into this topic" | node dist/cli.js -
-
-# Show help
-node dist/cli.js --help
+echo "Let's delve into this tapestry of ideas" | node dist/cli.js -
+pbpaste | node dist/cli.js -   # macOS clipboard
 ```
 
 ### As a Library
 
 ```typescript
-import { computeEqBenchScore } from 'slop-detector';
-import { stripHtml, stripMarkdown } from 'slop-detector';
+import { slopScoreService } from 'slop-detector';
 
-const text = "Your text here...";
-const plainText = stripMarkdown(stripHtml(text));
-const result = await computeEqBenchScore(plainText);
-
-console.log(`SLOP Score: ${result.slopScore}/100`);
-console.log(`Word Count: ${result.wordCount}`);
-console.log(`Metrics:`, result.metrics);
+const result = await slopScoreService.computeScoreFromText(text, 'en');
+console.log(result.slopScore); // 42.5
 ```
-
-### As an MCP Server
-
-You can run slop-detector as an MCP (Model Context Protocol) server to integrate with AI assistants.
-
-**Via npx (recommended):**
-```bash
-npx -y slop-detector
-```
-
-**Or build locally:**
-```bash
-npm run mcp
-```
-
-**Available tool:**
-- `score_text` - Computes SLOP score for provided text
-  - Input: `{ "text": "Your text here..." }`
-  - Returns: Score (0-100), word count, character count, and detailed metrics
-
-**Important:** The MCP server uses stdio transport. Never write to stdout - all logging goes to stderr.
-
-**Instructions for LLMs:**
-
-When using this tool:
-1. Pass the full text you want to analyze to the `score_text` tool
-2. Interpret the score:
-   - **0-20**: Very human-like, natural writing
-   - **20-40**: Mostly human with some AI characteristics
-   - **40-60**: Mixed characteristics, unclear origin
-   - **60-80**: Likely AI-generated with some editing
-   - **80-100**: Strong AI signature, minimal human intervention
-   - **Note: Scores above 30 are suspiciously AI-like**
-3. The metrics breakdown shows which patterns contributed most:
-   - High word score = overuse of "slop words" (delve, tapestry, leverage, etc.)
-   - High trigram score = common AI phrases (it is important, to note that)
-   - High contrast score = "not X but Y" rhetorical patterns
 
 ## Example Output
 
@@ -143,106 +93,36 @@ When using this tool:
 
 Final Score: 67.3/100
 Word Count: 342
-Character Count: 2156
-
-Component Metrics:
-  Word Score: 18.42 per 1k words
-  Trigram Score: 5.26 per 1k words
-  Contrast Pattern Score: 1.39 per 1k chars
 
 Top Slop Words:
   "delve": 3×
   "tapestry": 2×
-  "leverage": 2×
-
-Top Slop Trigrams:
-  "it is important": 2×
-  "to note that": 1×
 
 Contrast Patterns Found:
-  Pattern: S1_not_just_but
-  Match: "not just a product but"
-  Sentence: "This is not just a product but a comprehensive solution."
-
----
+  "not just a product but a comprehensive solution"
 
 Interpretation: Likely AI-generated with some editing
 ```
 
-## Testing
+## How It Works
 
-Try the provided example files:
+See **[docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md)** for:
+- Detailed algorithm explanation
+- Project structure
+- How to add custom patterns
 
-```bash
-npm run score examples/low-slop.txt      # Human-like writing
-npm run score examples/high-slop.txt     # AI-like writing
-npm run score examples/pattern-heavy.txt # Pattern-heavy text
-```
-
-Run the test suite:
+## Development
 
 ```bash
-npm test
+npm install          # Install dependencies
+npm run build        # Compile TypeScript
+npm test             # Run tests
+npm run mcp          # Start MCP server locally
 ```
-
-## Customization
-
-### Adjust Scoring Weights
-
-Edit `src/eqbench/scorer.ts`:
-
-```typescript
-const SCORING_CONSTANTS = {
-  WEIGHT_WORD: 0.60,      // Increase to make word matching more important
-  WEIGHT_PATTERN: 0.25,   // Increase if patterns are strong indicators
-  WEIGHT_TRIGRAM: 0.15,   // Adjust based on your use case
-  WORD_MULTIPLIER: 1000,
-  TRIGRAM_MULTIPLIER: 1000,
-};
-```
-
-### Add Custom Slop Words
-
-Edit `src/assets/slop_list.json`:
-
-```json
-[
-  ["delve"],
-  ["tapestry"],
-  ["your-custom-word"]
-]
-```
-
-### Add Custom Patterns
-
-Edit `src/eqbench/regexesStage1.ts`:
-
-```typescript
-export const STAGE1_REGEXES = {
-  not_just_but: /\bnot\s+just\b[^.!?]{1,50}\bbut\b/gi,
-  your_pattern: /your\s+regex\s+here/gi,
-};
-```
-
-## Algorithm Details
-
-For detailed information about the EQBench algorithm, normalization process, and implementation details, see:
-
-- **[docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md)** - Complete technical documentation
-
-## Performance
-
-- **Time Complexity**: O(n) where n = text length
-- **Memory Usage**: ~200KB for assets + ~5-10KB per 1000 words
-- **Processing Speed**:
-  - 500 words: ~50-100ms
-  - 2000 words: ~150-250ms
-  - 5000 words: ~300-500ms
 
 ## Requirements
 
-- Node.js 18.0.0 or higher
-- TypeScript 5.0.0 or higher
+- Node.js 18+
 
 ## License
 
@@ -250,17 +130,4 @@ MIT
 
 ## Credits
 
-This project implements and adapts the public SLOP score approach and materials:
-- slop-score repository (Samuel J. Paech): https://github.com/sam-paech/slop-score
-- EQBench SLOP Score overview: https://eqbench.com/slop-score.html
-
-BibTeX:
-```bibtex
-@misc{paech2025slopScore,
-      title={slop-score},
-      author={Samuel J. Paech},
-      year={2025},
-      howpublished={\url{https://github.com/sam-paech/slop-score}},
-      note={GitHub repository}
-}
-```
+Based on [slop-score](https://github.com/sam-paech/slop-score) by Samuel J. Paech and the [EQBench](https://eqbench.com/slop-score.html) methodology.
