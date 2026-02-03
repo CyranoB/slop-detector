@@ -1,10 +1,10 @@
 # How SLOP Detector Works
 
-This document explains the algorithm and project structure in plain terms.
+This document explains the algorithm and project structure in plain terms. The method is tuned for creative writing and storytelling, not for strict AI detection across all domains. It currently supports English text only.
 
 ## The Core Idea
 
-Large Language Models (LLMs) have writing quirks. They overuse certain words, phrases, and rhetorical patterns. SLOP Detector counts these patterns and produces a 0-100 score:
+Large Language Models (LLMs) have writing quirks. They overuse certain words, phrases, and rhetorical patterns. SLOP Detector counts these patterns and produces a 0-100 score that is most meaningful for creative prose:
 
 - **Low score (0-30)**: Looks human-written
 - **High score (30+)**: Looks AI-generated

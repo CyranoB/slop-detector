@@ -1,8 +1,10 @@
-# SLOP Score Detector
+# SLOP Detector
 
-![SLOP Score Detector](assets/header.png)
+![SLOP Detector](assets/header.png)
 
-Detect AI-generated text by analyzing writing patterns. Returns a 0-100 score where higher = more AI-like.
+Detect AI-like writing patterns in creative prose. Returns a 0-100 score where higher = more AI-like.
+
+SLOP Detector is inspired by the original slop-score project and is designed for creative writing analysis, not as a general-purpose AI detection system. It currently supports English text only.
 
 ## Quick Start
 
