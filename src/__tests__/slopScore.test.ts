@@ -4,7 +4,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { 
   SlopScoreService, 
   UnsupportedLanguageError 
-} from '../../../services/slopScore/slopScoreService.js';
+} from '../slopScoreService.js';
 
 describe('SlopScoreService Integration', () => {
   beforeEach(() => {

@@ -4,67 +4,23 @@ import winkPosTagger from 'wink-pos-tagger';
 import { normalizeText, sentenceSpans } from './tokenizer.js';
 import { STAGE1_REGEXES } from './regexesStage1.js';
 import { STAGE2_REGEXES } from './regexesStage2.js';
+import {
+  collectStage1Candidates,
+  collectStage2Candidates,
+  getPosReplacement,
+  type Interval,
+  type PosType,
+  type StreamPiece,
+} from './contrastDetectorHelpers.js';
 
 // Initialize tagger
 const tagger = winkPosTagger();
-
-// POS Tag sets matching EQBench logic
-const VERB_TAGS = new Set(['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']);
-const NOUN_TAGS = new Set(['NN', 'NNS', 'NNP', 'NNPS']);
-const ADJ_TAGS = new Set(['JJ', 'JJR', 'JJS']);
-const ADV_TAGS = new Set(['RB', 'RBR', 'RBS']);
 
 interface PosToken {
   value: string;
   tag: string;
   pos: string;
   lemma?: string;
-}
-
-// Binary search helpers
-function bisectRight(arr: number[], val: number): number {
-  let lo = 0, hi = arr.length;
-  while (lo < hi) {
-    const mid = Math.floor((lo + hi) / 2);
-    if ((arr[mid] ?? 0) <= val) lo = mid + 1;
-    else hi = mid;
-  }
-  return lo;
-}
-
-function bisectLeft(arr: number[], val: number): number {
-  let lo = 0, hi = arr.length;
-  while (lo < hi) {
-    const mid = Math.floor((lo + hi) / 2);
-    if ((arr[mid] ?? 0) < val) lo = mid + 1;
-    else hi = mid;
-  }
-  return lo;
-}
-
-function coveredSentenceRange(spans: Array<[number, number]>, start: number, end: number): [number, number] | null {
-  if (!spans.length || start >= end) return null;
-
-  const starts = spans.map(s => s[0]);
-  const ends = spans.map(s => s[1]);
-
-  const lo = bisectRight(ends, start);
-  const hi = bisectLeft(starts, end) - 1;
-
-  if (lo >= spans.length || hi < 0 || lo > hi) {
-    return null;
-  }
-
-  return [lo, hi];
-}
-
-interface Interval {
-  lo: number;
-  hi: number;
-  raw_start: number;
-  raw_end: number;
-  pattern_name: string;
-  match_text: string;
 }
 
 function mergeIntervals(items: Interval[]): Interval[] {
@@ -99,11 +55,11 @@ function mergeIntervals(items: Interval[]): Interval[] {
   return merged;
 }
 
-function tagStreamWithOffsets(text: string, posType: string = 'verb') {
+function tagStreamWithOffsets(text: string, posType: PosType = 'verb') {
   const tagged: PosToken[] = tagger.tagSentence(text);
   
   const parts: string[] = [];
-  const pieces: number[][] = []; // [streamStart, streamEnd, rawStart, rawEnd]
+  const pieces: StreamPiece[] = []; // [streamStart, streamEnd, rawStart, rawEnd]
   let streamPos = 0;
   let rawPos = 0;
 
@@ -123,23 +79,8 @@ function tagStreamWithOffsets(text: string, posType: string = 'verb') {
     }
 
     // Map token to POS tag if applicable
-    let out = value;
-    if (posTag) {
-      if (posType === 'verb' && VERB_TAGS.has(posTag)) {
-        out = 'VERB';
-      } else if (posType === 'noun' && NOUN_TAGS.has(posTag)) {
-        out = 'NOUN';
-      } else if (posType === 'adj' && ADJ_TAGS.has(posTag)) {
-        out = 'ADJ';
-      } else if (posType === 'adv' && ADV_TAGS.has(posTag)) {
-        out = 'ADV';
-      } else if (posType === 'all') {
-        if (VERB_TAGS.has(posTag)) out = 'VERB';
-        else if (NOUN_TAGS.has(posTag)) out = 'NOUN';
-        else if (ADJ_TAGS.has(posTag)) out = 'ADJ';
-        else if (ADV_TAGS.has(posTag)) out = 'ADV';
-      }
-    }
+    const replacement = getPosReplacement(posTag, posType);
+    const out = replacement ?? value;
 
     parts.push(out);
     const outLen = out.length;
@@ -194,78 +135,13 @@ export function extractContrastMatches(text: string): ContrastMatch[] {
   const candidates: Interval[] = [];
 
   // Stage 1: Run surface regexes on raw text
-  for (const [pname, pregex] of Object.entries(STAGE1_REGEXES)) {
-    const matches = Array.from(tNorm.matchAll(pregex));
-
-    for (const match of matches) {
-      if (match.index === undefined) continue;
-      
-      const rs = match.index;
-      const re = match.index + match[0].length;
-      const rng = coveredSentenceRange(spans, rs, re);
-
-      if (rng) {
-        const [lo, hi] = rng;
-        candidates.push({
-          lo,
-          hi,
-          raw_start: rs,
-          raw_end: re,
-          pattern_name: `S1_${pname}`,
-          match_text: match[0].trim(),
-        });
-      }
-    }
-  }
+  candidates.push(...collectStage1Candidates(tNorm, spans, STAGE1_REGEXES, 'S1_'));
 
   // Stage 2: Run POS-based regexes on tagged stream
   if (Object.keys(STAGE2_REGEXES).length > 0) {
     const { stream, pieces } = tagStreamWithOffsets(tNorm, 'verb');
-    
-    const streamStarts = pieces.map(p => p[0]!);
-    const streamEnds = pieces.map(p => p[1]!);
 
-    const streamToRaw = (ss: number, se: number): [number, number] | null => {
-      const i = bisectRight(streamEnds, ss);
-      const j = bisectLeft(streamStarts, se) - 1;
-
-      if (i >= pieces.length || j < i) {
-        return null;
-      }
-
-      // pieces[i] is [number, number, number, number]
-      const relevantPieces = pieces.slice(i, j + 1);
-      const rawS = Math.min(...relevantPieces.map(p => p[2]!));
-      const rawE = Math.max(...relevantPieces.map(p => p[3]!));
-      return [rawS, rawE];
-    };
-
-    for (const [pname, pregex] of Object.entries(STAGE2_REGEXES)) {
-      const matches = Array.from(stream.matchAll(pregex));
-
-      for (const match of matches) {
-        if (match.index === undefined) continue;
-        
-        const mapRes = streamToRaw(match.index, match.index + match[0].length);
-
-        if (mapRes) {
-          const [rs, re] = mapRes;
-          const rng = coveredSentenceRange(spans, rs, re);
-
-          if (rng) {
-            const [lo, hi] = rng;
-            candidates.push({
-              lo,
-              hi,
-              raw_start: rs,
-              raw_end: re,
-              pattern_name: `S2_${pname}`,
-              match_text: tNorm.substring(rs, re).trim(),
-            });
-          }
-        }
-      }
-    }
+    candidates.push(...collectStage2Candidates(tNorm, spans, STAGE2_REGEXES, stream, pieces, 'S2_'));
   }
 
   // Merge overlapping intervals
