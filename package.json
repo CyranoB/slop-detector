@@ -1,0 +1,40 @@
+{
+  "name": "slop-detector",
+  "version": "1.0.0",
+  "description": "AI-generated text detection tool using the EQBench SLOP score algorithm",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "slop-score": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc && npm run copy-assets",
+    "copy-assets": "cp -r src/assets dist/",
+    "score": "npm run build && node dist/cli.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "ai-detection",
+    "slop-score",
+    "text-analysis",
+    "llm-detection",
+    "eqbench"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "html-to-text": "^9.0.5",
+    "wink-pos-tagger": "^2.2.2"
+  },
+  "devDependencies": {
+    "@types/html-to-text": "^9.0.4",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
