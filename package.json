@@ -11,6 +11,7 @@
     "build": "tsc && npm run copy-assets",
     "copy-assets": "cp -r src/assets dist/",
     "score": "npm run build && node dist/cli.js",
+    "mcp": "npm run build && node dist/mcpServer.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "clean": "rm -rf dist"
@@ -25,8 +26,10 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
     "html-to-text": "^9.0.5",
-    "wink-pos-tagger": "^2.2.2"
+    "wink-pos-tagger": "^2.2.2",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/html-to-text": "^9.0.4",

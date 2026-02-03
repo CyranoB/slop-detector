@@ -1,5 +1,7 @@
 # SLOP Score Detector
 
+![SLOP Score Detector](assets/header.png)
+
 AI-generated text detection tool using the EQBench SLOP score algorithm.
 
 ## What is SLOP Score?
@@ -11,6 +13,8 @@ SLOP (Shitty LLM Output Patterns) is a 0-100 metric that measures how "AI-like" 
 - **40-60**: Mixed characteristics, unclear origin
 - **60-80**: Likely AI-generated with some editing
 - **80-100**: Strong AI signature, minimal human intervention
+
+> **Note:** Scores above 30 are suspiciously AI-like and warrant attention.
 
 ## How It Works
 
@@ -64,6 +68,53 @@ console.log(`SLOP Score: ${result.slopScore}/100`);
 console.log(`Word Count: ${result.wordCount}`);
 console.log(`Metrics:`, result.metrics);
 ```
+
+### As an MCP Server
+
+You can run slop-detector as an MCP (Model Context Protocol) server to integrate with AI assistants like Claude Desktop.
+
+**Build and run:**
+```bash
+npm run mcp
+```
+
+**Configure in Claude Desktop:**
+
+Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "slop-detector": {
+      "command": "node",
+      "args": ["/ABSOLUTE/PATH/TO/slop-detector/dist/mcpServer.js"]
+    }
+  }
+}
+```
+
+**Available tool:**
+- `score_text` - Computes SLOP score for provided text
+  - Input: `{ "text": "Your text here..." }`
+  - Returns: Score (0-100), word count, character count, and detailed metrics
+
+**Important:** The MCP server uses stdio transport. Never write to stdout - all logging goes to stderr.
+
+**Instructions for LLMs:**
+
+When using this tool:
+1. Pass the full text you want to analyze to the `score_text` tool
+2. Interpret the score:
+   - **0-20**: Very human-like, natural writing
+   - **20-40**: Mostly human with some AI characteristics
+   - **40-60**: Mixed characteristics, unclear origin
+   - **60-80**: Likely AI-generated with some editing
+   - **80-100**: Strong AI signature, minimal human intervention
+   - **Note: Scores above 30 are suspiciously AI-like**
+3. The metrics breakdown shows which patterns contributed most:
+   - High word score = overuse of "slop words" (delve, tapestry, leverage, etc.)
+   - High trigram score = common AI phrases (it is important, to note that)
+   - High contrast score = "not X but Y" rhetorical patterns
 
 ## Example Output
 
