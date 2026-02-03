@@ -24,7 +24,7 @@ export function wordsOnlyLower(s: string): string[] {
   const txt = normalizeQuotes(s.toLowerCase());
   const toks = txt.match(/[a-z']+/g) || [];
   // Strip leading/trailing apostrophes from each token
-  return toks.map(t => t.replace(/^'+|'+$/g, '')).filter(t => t.length > 0);
+  return toks.map(t => t.replace(/(?:^'+)|(?:'+$)/g, '')).filter(t => t.length > 0);
 }
 
 export function alphaTokens(tokens: string[]): string[] {

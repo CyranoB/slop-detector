@@ -4,59 +4,7 @@
 import { computeEqBenchScore } from './eqbench/scorer.js';
 import { stripHtml, stripMarkdown } from './textNormalizer.js';
 import { getCliInput, renderScoreOutput } from './cliHelpers.js';
-import * as fs from 'fs/promises';
-
-async function main() {
-  const args = process.argv.slice(2);
-  const input = getCliInput(args);
-
-  // Handle help flag
-  if (input.mode === 'help') {
-    printHelp();
-    process.exit(0);
-  }
-
-  // Check for input
-  if (input.mode === 'missing') {
-    console.error('Error: No input provided\n');
-    printHelp();
-    process.exit(1);
-  }
-
-  let rawText: string;
-
-  try {
-    if (input.mode === 'stdin') {
-      // Read from stdin
-      rawText = await readStdin();
-    } else {
-      // Read from file
-      rawText = await fs.readFile(input.filePath, 'utf-8');
-    }
-
-    if (!rawText || rawText.trim().length === 0) {
-      console.error('Error: Input is empty');
-      process.exit(1);
-    }
-
-    // Process text: strip HTML/Markdown
-    const plainText = stripMarkdown(stripHtml(rawText));
-
-    // Compute SLOP score
-    const result = await computeEqBenchScore(plainText);
-
-    // Output results
-    console.log(renderScoreOutput(result));
-
-  } catch (error) {
-    if (error instanceof Error) {
-      console.error(`Error: ${error.message}`);
-    } else {
-      console.error('Unknown error occurred');
-    }
-    process.exit(1);
-  }
-}
+import * as fs from 'node:fs/promises';
 
 async function readStdin(): Promise<string> {
   const chunks: Buffer[] = [];
@@ -95,7 +43,52 @@ The algorithm analyzes three components:
 `);
 }
 
-main().catch((error) => {
-  console.error('Fatal error:', error);
+const args = process.argv.slice(2);
+const input = getCliInput(args);
+
+// Handle help flag
+if (input.mode === 'help') {
+  printHelp();
+  process.exit(0);
+}
+
+// Check for input
+if (input.mode === 'missing') {
+  console.error('Error: No input provided\n');
+  printHelp();
   process.exit(1);
-});
+}
+
+try {
+  let rawText: string;
+
+  if (input.mode === 'stdin') {
+    // Read from stdin
+    rawText = await readStdin();
+  } else {
+    // Read from file
+    rawText = await fs.readFile(input.filePath, 'utf-8');
+  }
+
+  if (!rawText || rawText.trim().length === 0) {
+    console.error('Error: Input is empty');
+    process.exit(1);
+  }
+
+  // Process text: strip HTML/Markdown
+  const plainText = stripMarkdown(stripHtml(rawText));
+
+  // Compute SLOP score
+  const result = await computeEqBenchScore(plainText);
+
+  // Output results
+  console.log(renderScoreOutput(result));
+
+} catch (error) {
+  if (error instanceof Error) {
+    console.error(`Error: ${error.message}`);
+  } else {
+    console.error('Unknown error occurred');
+  }
+  process.exit(1);
+}
