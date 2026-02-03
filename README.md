@@ -56,6 +56,8 @@ codex mcp add slop-detector -- npx -y slop-detector
 
 > **Rule of thumb:** Scores above 30 are suspicious.
 
+> “The SLOP Meter doesn’t measure truth or beauty. It measures how loudly your sentences clap for themselves. When the needle bursts through the dial and a small goblin emerges to applaud, you are probably no longer writing—you are performing.”
+
 ## Usage
 
 ### As an MCP Tool
