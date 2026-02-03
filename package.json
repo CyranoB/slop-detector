@@ -5,9 +5,9 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "slop-detector": "./dist/mcpServer.js",
-    "slop-score": "./dist/cli.js",
-    "slop-detector-mcp": "./dist/mcpServer.js"
+    "slop-detector": "dist/mcpServer.js",
+    "slop-score": "dist/cli.js",
+    "slop-detector-mcp": "dist/mcpServer.js"
   },
   "files": [
     "dist",
@@ -52,6 +52,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/CyranoB/slop-detector.git"
+    "url": "git+https://github.com/CyranoB/slop-detector.git"
   }
 }
