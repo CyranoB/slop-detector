@@ -1,6 +1,6 @@
 {
   "name": "slop-detector",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "AI-generated text detection tool using the EQBench SLOP score algorithm",
   "type": "module",
   "main": "dist/index.js",
