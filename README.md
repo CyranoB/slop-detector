@@ -179,6 +179,17 @@ MIT
 
 ## Credits
 
-Based on the EQBench SLOP detection algorithm:
-- EQBench: https://github.com/EQ-bench/EQ-Bench
-- Original research on AI-generated text detection patterns
+This project implements and adapts the public SLOP score approach and materials:
+- slop-score repository (Samuel J. Paech): https://github.com/sam-paech/slop-score
+- EQBench SLOP Score overview: https://eqbench.com/slop-score.html
+
+BibTeX:
+```bibtex
+@misc{paech2025slopScore,
+      title={slop-score},
+      author={Samuel J. Paech},
+      year={2025},
+      howpublished={\url{https://github.com/sam-paech/slop-score}},
+      note={GitHub repository}
+}
+```
