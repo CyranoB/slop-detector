@@ -11,23 +11,36 @@ export interface Interval {
   match_text: string;
 }
 
-const VERB_TAGS = new Set(['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']);
-const NOUN_TAGS = new Set(['NN', 'NNS', 'NNP', 'NNPS']);
-const ADJ_TAGS = new Set(['JJ', 'JJR', 'JJS']);
-const ADV_TAGS = new Set(['RB', 'RBR', 'RBS']);
+// Map each POS tag to its replacement token
+const POS_TAG_MAP: Record<string, string> = {
+  // Verbs
+  VB: 'VERB', VBD: 'VERB', VBG: 'VERB', VBN: 'VERB', VBP: 'VERB', VBZ: 'VERB',
+  // Nouns
+  NN: 'NOUN', NNS: 'NOUN', NNP: 'NOUN', NNPS: 'NOUN',
+  // Adjectives
+  JJ: 'ADJ', JJR: 'ADJ', JJS: 'ADJ',
+  // Adverbs
+  RB: 'ADV', RBR: 'ADV', RBS: 'ADV',
+};
+
+// Map posType to allowed replacement tokens
+const POS_TYPE_ALLOWED: Record<PosType, Set<string> | null> = {
+  verb: new Set(['VERB']),
+  noun: new Set(['NOUN']),
+  adj: new Set(['ADJ']),
+  adv: new Set(['ADV']),
+  all: null, // null means all replacements allowed
+};
 
 export function getPosReplacement(posTag: string | undefined, posType: PosType): string | null {
   if (!posTag) return null;
 
-  if (posType === 'verb' && VERB_TAGS.has(posTag)) return 'VERB';
-  if (posType === 'noun' && NOUN_TAGS.has(posTag)) return 'NOUN';
-  if (posType === 'adj' && ADJ_TAGS.has(posTag)) return 'ADJ';
-  if (posType === 'adv' && ADV_TAGS.has(posTag)) return 'ADV';
-  if (posType === 'all') {
-    if (VERB_TAGS.has(posTag)) return 'VERB';
-    if (NOUN_TAGS.has(posTag)) return 'NOUN';
-    if (ADJ_TAGS.has(posTag)) return 'ADJ';
-    if (ADV_TAGS.has(posTag)) return 'ADV';
+  const replacement = POS_TAG_MAP[posTag];
+  if (!replacement) return null;
+
+  const allowed = POS_TYPE_ALLOWED[posType];
+  if (allowed === null || allowed.has(replacement)) {
+    return replacement;
   }
 
   return null;
