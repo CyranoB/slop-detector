@@ -2,6 +2,8 @@
 
 ![SLOP Detector](assets/header.png)
 
+> “The SLOP Meter doesn’t measure truth or beauty. It measures how loudly your sentences clap for themselves. When the needle bursts through the dial and a small goblin emerges to applaud, you are probably no longer writing—you are performing.”
+
 Detect AI-like writing patterns in creative prose. Returns a 0-100 score where higher = more AI-like.
 
 SLOP Detector is inspired by the original slop-score project and is designed for creative writing analysis, not as a general-purpose AI detection system. It currently supports English text only.
