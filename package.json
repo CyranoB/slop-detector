@@ -1,12 +1,19 @@
 {
   "name": "slop-detector",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "AI-generated text detection tool using the EQBench SLOP score algorithm",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "slop-score": "./dist/cli.js"
+    "slop-detector": "./dist/mcpServer.js",
+    "slop-score": "./dist/cli.js",
+    "slop-detector-mcp": "./dist/mcpServer.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc && npm run copy-assets",
     "copy-assets": "cp -r src/assets dist/",
@@ -14,14 +21,17 @@
     "mcp": "npm run build && node dist/mcpServer.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run build && npm test"
   },
   "keywords": [
     "ai-detection",
     "slop-score",
     "text-analysis",
     "llm-detection",
-    "eqbench"
+    "eqbench",
+    "mcp",
+    "model-context-protocol"
   ],
   "author": "",
   "license": "MIT",
@@ -39,5 +49,9 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CyranoB/slop-detector.git"
   }
 }

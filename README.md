@@ -4,6 +4,36 @@
 
 AI-generated text detection tool using the EQBench SLOP score algorithm.
 
+## Quick Start (MCP Server)
+
+Run the MCP server via npx (no installation required):
+
+```bash
+npx -y slop-detector
+```
+
+**Add to Claude Code:**
+```bash
+claude mcp add slop-detector -- npx -y slop-detector
+```
+
+**Add to Codex:**
+```bash
+codex mcp add slop-detector -- npx -y slop-detector
+```
+
+**Add to Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+```json
+{
+  "mcpServers": {
+    "slop-detector": {
+      "command": "npx",
+      "args": ["-y", "slop-detector"]
+    }
+  }
+}
+```
+
 ## What is SLOP Score?
 
 SLOP (Shitty LLM Output Patterns) is a 0-100 metric that measures how "AI-like" text appears:
@@ -71,26 +101,16 @@ console.log(`Metrics:`, result.metrics);
 
 ### As an MCP Server
 
-You can run slop-detector as an MCP (Model Context Protocol) server to integrate with AI assistants like Claude Desktop.
+You can run slop-detector as an MCP (Model Context Protocol) server to integrate with AI assistants.
 
-**Build and run:**
+**Via npx (recommended):**
 ```bash
-npm run mcp
+npx -y slop-detector
 ```
 
-**Configure in Claude Desktop:**
-
-Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json`):
-
-```json
-{
-  "mcpServers": {
-    "slop-detector": {
-      "command": "node",
-      "args": ["/ABSOLUTE/PATH/TO/slop-detector/dist/mcpServer.js"]
-    }
-  }
-}
+**Or build locally:**
+```bash
+npm run mcp
 ```
 
 **Available tool:**
