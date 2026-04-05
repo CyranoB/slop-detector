@@ -38,6 +38,38 @@ export function getInterpretation(slopScore: number): string {
   return 'Interpretation: Strong AI signature, minimal human intervention';
 }
 
+function renderHitList(lines: string[], header: string, hits: Array<[string, number]>, limit: number): void {
+  if (hits.length === 0) return;
+  lines.push('', header);
+  for (const [text, count] of hits.slice(0, limit)) {
+    lines.push(`  "${text}": ${count}×`);
+  }
+}
+
+function renderContrastMatches(lines: string[], matches: EqBenchScoreResult['details']['contrastMatches']): void {
+  if (matches.length === 0) return;
+  lines.push('', 'Contrast Patterns Found:');
+  for (const match of matches.slice(0, 5)) {
+    lines.push(`  Pattern: ${match.pattern_name}`);
+    lines.push(`  Match: "${match.match_text}"`);
+    if (match.sentence && match.sentence.length < 150) {
+      lines.push(`  Sentence: "${match.sentence}"`);
+    }
+    lines.push('');
+  }
+}
+
+function renderTropeMatches(lines: string[], matches: EqBenchScoreResult['details']['tropeMatches']): void {
+  if (matches.length === 0) return;
+  lines.push('', 'AI Tropes Detected:');
+  for (const match of matches.slice(0, 10)) {
+    lines.push(`  [${match.category}] ${match.trope_name}: "${match.match_text}"`);
+  }
+  if (matches.length > 10) {
+    lines.push(`  ... and ${matches.length - 10} more`);
+  }
+}
+
 export function renderScoreOutput(result: EqBenchScoreResult): string {
   const lines: string[] = [];
 
@@ -54,45 +86,10 @@ export function renderScoreOutput(result: EqBenchScoreResult): string {
   lines.push(`  Contrast Pattern Score: ${result.metrics.not_x_but_y_per_1k_chars.toFixed(2)} per 1k chars`);
   lines.push(`  Trope Pattern Score: ${result.metrics.trope_patterns_per_1k_chars.toFixed(2)} per 1k chars`);
 
-  if (result.details.wordHits.length > 0) {
-    lines.push('');
-    lines.push('Top Slop Words:');
-    for (const [word, count] of result.details.wordHits.slice(0, 10)) {
-      lines.push(`  "${word}": ${count}×`);
-    }
-  }
-
-  if (result.details.trigramHits.length > 0) {
-    lines.push('');
-    lines.push('Top Slop Trigrams:');
-    for (const [trigram, count] of result.details.trigramHits.slice(0, 5)) {
-      lines.push(`  "${trigram}": ${count}×`);
-    }
-  }
-
-  if (result.details.contrastMatches.length > 0) {
-    lines.push('');
-    lines.push('Contrast Patterns Found:');
-    for (const match of result.details.contrastMatches.slice(0, 5)) {
-      lines.push(`  Pattern: ${match.pattern_name}`);
-      lines.push(`  Match: "${match.match_text}"`);
-      if (match.sentence && match.sentence.length < 150) {
-        lines.push(`  Sentence: "${match.sentence}"`);
-      }
-      lines.push('');
-    }
-  }
-
-  if (result.details.tropeMatches.length > 0) {
-    lines.push('');
-    lines.push('AI Tropes Detected:');
-    for (const match of result.details.tropeMatches.slice(0, 10)) {
-      lines.push(`  [${match.category}] ${match.trope_name}: "${match.match_text}"`);
-    }
-    if (result.details.tropeMatches.length > 10) {
-      lines.push(`  ... and ${result.details.tropeMatches.length - 10} more`);
-    }
-  }
+  renderHitList(lines, 'Top Slop Words:', result.details.wordHits, 10);
+  renderHitList(lines, 'Top Slop Trigrams:', result.details.trigramHits, 5);
+  renderContrastMatches(lines, result.details.contrastMatches);
+  renderTropeMatches(lines, result.details.tropeMatches);
 
   lines.push('---');
   lines.push('');

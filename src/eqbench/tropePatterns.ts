@@ -25,153 +25,130 @@ export interface StatThreshold {
   threshold: number;
 }
 
+// Auto-expand contractions so we only write "it's X" and get "it is X" for free
+const CONTRACTION_MAP: Record<string, string> = {
+  "it's": "it is",
+  "here's": "here is",
+  "let's": "let us",
+};
+
+function expandContractions(phrases: string[]): string[] {
+  const expanded: string[] = [];
+  for (const phrase of phrases) {
+    expanded.push(phrase);
+    for (const [contraction, full] of Object.entries(CONTRACTION_MAP)) {
+      if (phrase.startsWith(contraction)) {
+        expanded.push(full + phrase.slice(contraction.length));
+        break;
+      }
+    }
+  }
+  return expanded;
+}
+
+function phrase(trope_name: string, category: TropeCategory, phrases: string[]): PhrasePattern {
+  return { trope_name, category, phrases: expandContractions(phrases) };
+}
+
 // ============================================================
 // PHRASE-BASED TROPES
 // Detected by case-insensitive substring matching in text
 // ============================================================
 
 export const PHRASE_PATTERNS: PhrasePattern[] = [
-  // --- TONE ---
-  {
-    trope_name: 'filler_transitions',
-    category: 'tone',
-    phrases: [
-      "it's worth noting",
-      "it is worth noting",
-      "it's important to note",
-      "it is important to note",
-      "it bears mentioning",
-      "it should be noted",
-      "it's worth mentioning",
-      "it is worth mentioning",
-      "it's crucial to understand",
-      "it is crucial to understand",
-      "it's important to remember",
-      "it is important to remember",
-      "it's worth emphasizing",
-      "it is worth emphasizing",
-    ],
-  },
-  {
-    trope_name: 'false_suspense',
-    category: 'tone',
-    phrases: [
-      "here's the kicker",
-      "here is the kicker",
-      "here's the thing",
-      "here is the thing",
-      "here's the catch",
-      "here is the catch",
-      "here's where it gets interesting",
-      "here's what makes this",
-      "here's the twist",
-      "here is the twist",
-      "here's what most people miss",
-      "here's the secret",
-      "here's the deal",
-      "here's the lesson",
-      "here's the takeaway",
-      "here's the starting point",
-    ],
-  },
-  {
-    trope_name: 'serves_as_dodge',
-    category: 'word_choice',
-    phrases: [
-      "serves as",
-      "stands as",
-      "functions as",
-      "acts as a",
-      "operates as",
-      "works as a",
-    ],
-  },
-  {
-    trope_name: 'signposted_conclusion',
-    category: 'composition',
-    phrases: [
-      "in conclusion",
-      "to sum up",
-      "in summary",
-      "to summarize",
-      "all things considered",
-      "in the final analysis",
-      "at the end of the day",
-      "when all is said and done",
-      "to wrap up",
-      "to conclude",
-    ],
-  },
-  {
-    trope_name: 'pedagogical_voice',
-    category: 'tone',
-    phrases: [
-      "let's break this down",
-      "let's unpack this",
-      "let's dive in",
-      "let's take a closer look",
-      "let's explore",
-      "let me walk you through",
-      "let's dig into",
-      "let's examine",
-      "let me break this down",
-      "let me explain",
-    ],
-  },
-  {
-    trope_name: 'think_of_it_as',
-    category: 'tone',
-    phrases: [
-      "think of it as",
-      "think of this as",
-      "consider this",
-      "picture this",
-      "think of it like",
-    ],
-  },
-  {
-    trope_name: 'imagine_a_world',
-    category: 'tone',
-    phrases: [
-      "imagine a world",
-      "imagine a future",
-      "picture a world",
-      "imagine a scenario",
-      "envision a world",
-    ],
-  },
-  {
-    trope_name: 'truth_is_simple',
-    category: 'tone',
-    phrases: [
-      "the truth is",
-      "the reality is",
-      "the fact is",
-      "it's that simple",
-      "it is that simple",
-      "the answer is simple",
-      "the real story",
-      "the simple truth",
-      "the hard truth",
-      "the uncomfortable truth",
-    ],
-  },
-  {
-    trope_name: 'grandiose_stakes',
-    category: 'tone',
-    phrases: [
-      "fundamentally reshape",
-      "fundamentally transform",
-      "redefine what it means",
-      "change everything",
-      "reshape the way we",
-      "transform the way",
-      "revolutionize the way",
-      "forever change",
-      "reshape our understanding",
-      "rewrite the rules",
-    ],
-  },
+  phrase('filler_transitions', 'tone', [
+    "it's worth noting",
+    "it's important to note",
+    "it bears mentioning",
+    "it should be noted",
+    "it's worth mentioning",
+    "it's crucial to understand",
+    "it's important to remember",
+    "it's worth emphasizing",
+  ]),
+  phrase('false_suspense', 'tone', [
+    "here's the kicker",
+    "here's the thing",
+    "here's the catch",
+    "here's where it gets interesting",
+    "here's what makes this",
+    "here's the twist",
+    "here's what most people miss",
+    "here's the secret",
+    "here's the deal",
+    "here's the lesson",
+    "here's the takeaway",
+    "here's the starting point",
+  ]),
+  phrase('serves_as_dodge', 'word_choice', [
+    "serves as",
+    "stands as",
+    "functions as",
+    "acts as a",
+    "operates as",
+    "works as a",
+  ]),
+  phrase('signposted_conclusion', 'composition', [
+    "in conclusion",
+    "to sum up",
+    "in summary",
+    "to summarize",
+    "all things considered",
+    "in the final analysis",
+    "at the end of the day",
+    "when all is said and done",
+    "to wrap up",
+    "to conclude",
+  ]),
+  phrase('pedagogical_voice', 'tone', [
+    "let's break this down",
+    "let's unpack this",
+    "let's dive in",
+    "let's take a closer look",
+    "let's explore",
+    "let me walk you through",
+    "let's dig into",
+    "let's examine",
+    "let me break this down",
+    "let me explain",
+  ]),
+  phrase('think_of_it_as', 'tone', [
+    "think of it as",
+    "think of this as",
+    "consider this",
+    "picture this",
+    "think of it like",
+  ]),
+  phrase('imagine_a_world', 'tone', [
+    "imagine a world",
+    "imagine a future",
+    "picture a world",
+    "imagine a scenario",
+    "envision a world",
+  ]),
+  phrase('truth_is_simple', 'tone', [
+    "the truth is",
+    "the reality is",
+    "the fact is",
+    "it's that simple",
+    "the answer is simple",
+    "the real story",
+    "the simple truth",
+    "the hard truth",
+    "the uncomfortable truth",
+  ]),
+  phrase('grandiose_stakes', 'tone', [
+    "fundamentally reshape",
+    "fundamentally transform",
+    "redefine what it means",
+    "change everything",
+    "reshape the way we",
+    "transform the way",
+    "revolutionize the way",
+    "forever change",
+    "reshape our understanding",
+    "rewrite the rules",
+  ]),
 ];
 
 // ============================================================
@@ -223,28 +200,20 @@ export const REGEX_PATTERNS: RegexPattern[] = [
 // Detected by counting occurrences and comparing against thresholds
 // ============================================================
 
-// Em-dash: human baseline ~1-3 per 1k chars; AI often 5+
-export const EM_DASH_THRESHOLD: StatThreshold = {
-  trope_name: 'em_dash_addiction',
-  category: 'formatting',
-  threshold: 5.0, // per 1k chars
-};
+function stat(trope_name: string, category: TropeCategory, threshold: number): StatThreshold {
+  return { trope_name, category, threshold };
+}
 
-// Bold-first bullets: regex applied to raw markdown text
+// Em-dash: human baseline ~1-3 per 1k chars; AI often 5+ (rate per 1k chars)
+export const EM_DASH_THRESHOLD = stat('em_dash_addiction', 'formatting', 5.0);
+
+// Bold-first bullets: regex applied to raw markdown (absolute count, even 2 is suspicious)
 export const BOLD_FIRST_BULLET_REGEX = /^\s*[-*+]\s+\*\*[^*]+\*\*[:\s]/gm;
-export const BOLD_FIRST_BULLET_THRESHOLD: StatThreshold = {
-  trope_name: 'bold_first_bullets',
-  category: 'formatting',
-  threshold: 2, // absolute count - even 2 is suspicious
-};
+export const BOLD_FIRST_BULLET_THRESHOLD = stat('bold_first_bullets', 'formatting', 2);
 
-// Unicode decoration characters
+// Unicode decoration characters (rate per 1k chars)
 export const UNICODE_DECORATION_CHARS = /[\u2192\u2190\u2191\u2193\u2794\u27A1\u2714\u2716\u2717\u2718\u2713\u2022\u25CF\u25CB\u25AA\u25AB\u2605\u2606\u2728]/g;
-export const UNICODE_DECORATION_THRESHOLD: StatThreshold = {
-  trope_name: 'unicode_decoration',
-  category: 'formatting',
-  threshold: 2.0, // per 1k chars
-};
+export const UNICODE_DECORATION_THRESHOLD = stat('unicode_decoration', 'formatting', 2.0);
 
 // Anaphora: 3+ consecutive sentences starting with the same word
 export const ANAPHORA_MIN_RUN = 3;
@@ -253,10 +222,6 @@ export const ANAPHORA_MIN_RUN = 3;
 export const SHORT_FRAGMENT_WORD_LIMIT = 6;
 export const SHORT_FRAGMENT_DENSITY_THRESHOLD = 0.25; // 25% of sentences
 
-// Tricolon abuse: "X, Y, and Z" patterns
+// Tricolon abuse: "X, Y, and Z" patterns (rate per 1k chars)
 export const TRICOLON_REGEX = /\b\w+(?:\s+\w+){0,3},\s+\w+(?:\s+\w+){0,3},\s+and\s+\w+(?:\s+\w+){0,3}\b/gi;
-export const TRICOLON_DENSITY_THRESHOLD: StatThreshold = {
-  trope_name: 'tricolon_abuse',
-  category: 'sentence_structure',
-  threshold: 6.0, // per 1k chars
-};
+export const TRICOLON_DENSITY_THRESHOLD = stat('tricolon_abuse', 'sentence_structure', 6.0);
