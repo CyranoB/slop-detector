@@ -23,11 +23,13 @@ describe('SlopScoreService Integration', () => {
     
     const result = await service.computeScoreFromText(text, 'en');
     
-    // Expectation based on manual check with EQBench logic
-    // We expect ~61.2
-    expect(result.slopScore).toBeCloseTo(61.2, 0); // Allow +/- 0.5 (rounding differences)
+    // Score changed from ~61.2 to ~51 after adding trope detection
+    // and rebalancing weights from 60/25/15 to 50/20/12/18
+    expect(result.slopScore).toBeCloseTo(51, 0);
     expect(result.metrics).toBeDefined();
+    expect(result.metrics?.trope_patterns_per_1k_chars).toBeDefined();
     expect(result.details).toBeDefined();
+    expect(result.details?.tropeMatches).toBeDefined();
   });
 
   it('should strip HTML before scoring', async () => {

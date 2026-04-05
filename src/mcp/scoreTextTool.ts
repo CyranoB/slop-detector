@@ -31,7 +31,7 @@ export async function scoreTextToolHandler(raw: unknown): Promise<CallToolResult
     content: [
       {
         type: "text" as const,
-        text: `SLOP Score: ${result.slopScore}/100\nWord Count: ${result.wordCount}\nChar Count: ${result.charCount}\n\nMetrics:\n- Words per 1k: ${result.metrics?.slop_list_matches_per_1k_words.toFixed(2)}\n- Trigrams per 1k: ${result.metrics?.slop_trigram_matches_per_1k_words.toFixed(2)}\n- Contrast per 1k chars: ${result.metrics?.not_x_but_y_per_1k_chars.toFixed(2)}`,
+        text: `SLOP Score: ${result.slopScore}/100\nWord Count: ${result.wordCount}\nChar Count: ${result.charCount}\n\nMetrics:\n- Words per 1k: ${result.metrics?.slop_list_matches_per_1k_words.toFixed(2)}\n- Trigrams per 1k: ${result.metrics?.slop_trigram_matches_per_1k_words.toFixed(2)}\n- Contrast per 1k chars: ${result.metrics?.not_x_but_y_per_1k_chars.toFixed(2)}\n- Trope patterns per 1k chars: ${result.metrics?.trope_patterns_per_1k_chars.toFixed(2)}`,
       },
     ],
     isError: false,

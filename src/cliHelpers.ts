@@ -52,6 +52,7 @@ export function renderScoreOutput(result: EqBenchScoreResult): string {
   lines.push(`  Word Score: ${result.metrics.slop_list_matches_per_1k_words.toFixed(2)} per 1k words`);
   lines.push(`  Trigram Score: ${result.metrics.slop_trigram_matches_per_1k_words.toFixed(2)} per 1k words`);
   lines.push(`  Contrast Pattern Score: ${result.metrics.not_x_but_y_per_1k_chars.toFixed(2)} per 1k chars`);
+  lines.push(`  Trope Pattern Score: ${result.metrics.trope_patterns_per_1k_chars.toFixed(2)} per 1k chars`);
 
   if (result.details.wordHits.length > 0) {
     lines.push('');
@@ -79,6 +80,17 @@ export function renderScoreOutput(result: EqBenchScoreResult): string {
         lines.push(`  Sentence: "${match.sentence}"`);
       }
       lines.push('');
+    }
+  }
+
+  if (result.details.tropeMatches.length > 0) {
+    lines.push('');
+    lines.push('AI Tropes Detected:');
+    for (const match of result.details.tropeMatches.slice(0, 10)) {
+      lines.push(`  [${match.category}] ${match.trope_name}: "${match.match_text}"`);
+    }
+    if (result.details.tropeMatches.length > 10) {
+      lines.push(`  ... and ${result.details.tropeMatches.length - 10} more`);
     }
   }
 

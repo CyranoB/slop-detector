@@ -56,12 +56,14 @@ export class SlopScoreService {
       throw new UnsupportedLanguageError(language);
     }
     
-    // 1. Pre-process: Strip HTML & Markdown
-    // This ensures we score the text as a user would see/paste it
-    const plainText = stripMarkdown(stripHtml(text));
-    
+    // 1. Pre-process: Strip HTML, then markdown
+    const htmlStripped = stripHtml(text);
+    const plainText = stripMarkdown(htmlStripped);
+
     // 2. Compute score using EQBench pipeline
-    const result = await computeEqBenchScore(plainText);
+    // Pass htmlStripped as rawText so formatting tropes (em-dashes, bold bullets)
+    // can be detected before markdown stripping destroys those signals
+    const result = await computeEqBenchScore(plainText, htmlStripped);
     
     return {
       ...result,

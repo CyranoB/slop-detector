@@ -5,6 +5,12 @@ export interface ContrastMatch {
   match_text: string;
 }
 
+export interface TropeMatch {
+  trope_name: string;
+  category: string;
+  match_text: string;
+}
+
 export interface SlopScoreResult {
   slopScore: number;
   computeMs: number;
@@ -14,11 +20,13 @@ export interface SlopScoreResult {
     slop_list_matches_per_1k_words: number;
     slop_trigram_matches_per_1k_words: number;
     not_x_but_y_per_1k_chars: number;
+    trope_patterns_per_1k_chars: number;
   };
   details?: {
     wordHits: Array<[string, number]>;
     trigramHits: Array<[string, number]>;
     contrastMatches: ContrastMatch[];
+    tropeMatches: TropeMatch[];
   };
 }
 

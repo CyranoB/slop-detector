@@ -34,6 +34,7 @@ describe('cliHelpers', () => {
         slop_list_matches_per_1k_words: 12.345,
         slop_trigram_matches_per_1k_words: 6.789,
         not_x_but_y_per_1k_chars: 0.1234,
+        trope_patterns_per_1k_chars: 0.5678,
       },
       details: {
         wordHits: [['delve', 2]],
@@ -43,7 +44,12 @@ describe('cliHelpers', () => {
           match_text: 'not X but Y',
           sentence: 'not X but Y',
           sentence_count: 1,
-        }]
+        }],
+        tropeMatches: [{
+          trope_name: 'filler_transitions',
+          category: 'tone',
+          match_text: "it's worth noting",
+        }],
       }
     });
 
@@ -52,6 +58,7 @@ describe('cliHelpers', () => {
     expect(output).toContain('Word Score: 12.35 per 1k words');
     expect(output).toContain('Trigram Score: 6.79 per 1k words');
     expect(output).toContain('Contrast Pattern Score: 0.12 per 1k chars');
+    expect(output).toContain('Trope Pattern Score: 0.57 per 1k chars');
     expect(output).toContain('Top Slop Words:');
     expect(output).toContain('"delve": 2×');
     expect(output).toContain('Top Slop Trigrams:');
@@ -59,6 +66,8 @@ describe('cliHelpers', () => {
     expect(output).toContain('Contrast Patterns Found:');
     expect(output).toContain('Pattern: S1_not_x_but_y');
     expect(output).toContain('Match: "not X but Y"');
+    expect(output).toContain('AI Tropes Detected:');
+    expect(output).toContain('[tone] filler_transitions:');
     expect(output).toContain('Interpretation: Mixed characteristics, unclear origin');
   });
 });

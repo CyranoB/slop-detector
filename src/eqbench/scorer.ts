@@ -5,6 +5,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { wordsOnlyLower, alphaTokens } from './tokenizer.js';
 import { scoreContrast, type ContrastScoreResult } from './contrastDetector.js';
+import { scoreTropes, type TropeScoreResult, type TropeMatch } from './tropeDetector.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,9 +18,10 @@ const LEADERBOARD_PATH = path.join(ASSETS_DIR, 'leaderboard_results.json');
 
 // Constants
 const SCORING_CONSTANTS = {
-  WEIGHT_WORD: 0.60,
-  WEIGHT_PATTERN: 0.25,
-  WEIGHT_TRIGRAM: 0.15,
+  WEIGHT_WORD: 0.50,
+  WEIGHT_PATTERN: 0.20,
+  WEIGHT_TRIGRAM: 0.12,
+  WEIGHT_TROPE: 0.18,
   WORD_MULTIPLIER: 1000,
   TRIGRAM_MULTIPLIER: 1000,
 };
@@ -98,6 +100,8 @@ async function loadAssets(): Promise<SlopAssets> {
     slop_words: computeRange(metrics.slop_words),
     slop_trigrams: computeRange(metrics.slop_trigrams),
     contrast: computeRange(metrics.contrast),
+    // Bootstrap range for tropes - no leaderboard data yet
+    tropes: { min: 0, max: 5 },
   };
 
   loadedAssets = { words, trigrams, normalizationRanges };
@@ -112,11 +116,13 @@ export interface EqBenchScoreResult {
     slop_list_matches_per_1k_words: number;
     slop_trigram_matches_per_1k_words: number;
     not_x_but_y_per_1k_chars: number;
+    trope_patterns_per_1k_chars: number;
   };
   details: {
     wordHits: Array<[string, number]>;
     trigramHits: Array<[string, number]>;
     contrastMatches: any[];
+    tropeMatches: TropeMatch[];
   };
 }
 
@@ -126,9 +132,9 @@ function normalizeValue(value: number, range: { min: number; max: number } | und
   return Math.max(0, Math.min(1, normalized));
 }
 
-export async function computeEqBenchScore(text: string): Promise<EqBenchScoreResult> {
+export async function computeEqBenchScore(text: string, rawText?: string): Promise<EqBenchScoreResult> {
   const assets = await loadAssets();
-  
+
   // 1. Tokenization (EQBench pipeline)
   const toks0 = wordsOnlyLower(text);
   const tokens = alphaTokens(toks0);
@@ -166,15 +172,21 @@ export async function computeEqBenchScore(text: string): Promise<EqBenchScoreRes
   const contrastResult = scoreContrast(text);
   const contrastScore = contrastResult.rate_per_1k;
 
-  // 4. Normalization & Weighting
+  // 4. Trope Scoring
+  const tropeResult = scoreTropes(text, rawText ?? text);
+  const tropeScore = tropeResult.rate_per_1k;
+
+  // 5. Normalization & Weighting
   const normWords = normalizeValue(wordScore, assets.normalizationRanges.slop_words);
   const normTrigrams = normalizeValue(trigramScore, assets.normalizationRanges.slop_trigrams);
   const normContrast = normalizeValue(contrastScore, assets.normalizationRanges.contrast);
+  const normTropes = normalizeValue(tropeScore, assets.normalizationRanges.tropes);
 
   const rawSlopScore = (
     normWords * SCORING_CONSTANTS.WEIGHT_WORD +
     normContrast * SCORING_CONSTANTS.WEIGHT_PATTERN +
-    normTrigrams * SCORING_CONSTANTS.WEIGHT_TRIGRAM
+    normTrigrams * SCORING_CONSTANTS.WEIGHT_TRIGRAM +
+    normTropes * SCORING_CONSTANTS.WEIGHT_TROPE
   ) * 100;
 
   // Round to 1 decimal place
@@ -188,11 +200,13 @@ export async function computeEqBenchScore(text: string): Promise<EqBenchScoreRes
       slop_list_matches_per_1k_words: wordScore,
       slop_trigram_matches_per_1k_words: trigramScore,
       not_x_but_y_per_1k_chars: contrastScore,
+      trope_patterns_per_1k_chars: tropeScore,
     },
     details: {
       wordHits: Array.from(wordHitMap.entries()).sort((a, b) => b[1] - a[1]),
       trigramHits: Array.from(trigramHitMap.entries()).sort((a, b) => b[1] - a[1]),
       contrastMatches: contrastResult.matches,
+      tropeMatches: tropeResult.matches,
     }
   };
 }
