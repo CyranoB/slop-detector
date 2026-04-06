@@ -49,13 +49,11 @@ Also returns metrics: word hits, trigram matches, and contrast patterns per 1k w
   scoreTextToolHandler,
 );
 
-async function main() {
+try {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("slop-detector MCP server running on stdio");
-}
-
-main().catch((error) => {
-  console.error("Fatal error in main():", error);
+} catch (error) {
+  console.error("Fatal error:", error);
   process.exit(1);
-});
+}

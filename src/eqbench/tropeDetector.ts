@@ -87,12 +87,8 @@ function detectEmDashAddiction(rawText: string): TropeMatch[] {
   if (chars === 0) return matches;
 
   // Count em-dashes (U+2014) and double-hyphens used as em-dashes
-  let count = 0;
   const emDashRegex = /\u2014|(?<!\w)--(?!\w)/g;
-  let m;
-  while ((m = emDashRegex.exec(rawText)) !== null) {
-    count++;
-  }
+  const count = (rawText.match(emDashRegex) ?? []).length;
 
   const rate = (count * 1000) / chars;
   if (rate > EM_DASH_THRESHOLD.threshold) {
@@ -111,12 +107,7 @@ function detectEmDashAddiction(rawText: string): TropeMatch[] {
  */
 function detectBoldFirstBullets(rawText: string): TropeMatch[] {
   const matches: TropeMatch[] = [];
-  BOLD_FIRST_BULLET_REGEX.lastIndex = 0;
-  let count = 0;
-  let m;
-  while ((m = BOLD_FIRST_BULLET_REGEX.exec(rawText)) !== null) {
-    count++;
-  }
+  const count = (rawText.match(BOLD_FIRST_BULLET_REGEX) ?? []).length;
 
   if (count >= BOLD_FIRST_BULLET_THRESHOLD.threshold) {
     matches.push({

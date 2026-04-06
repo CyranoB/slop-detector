@@ -118,19 +118,34 @@ export const PHRASE_PATTERNS: PhrasePattern[] = [
 // REGEX-BASED TROPES
 // ============================================================
 
+// Build alternation regex from word list to keep patterns readable
+function words(list: string[]): string {
+  return `(?:${list.join('|')})`;
+}
+
+const DETERMINERS = words(['The', 'This', 'That', 'Its', 'Her', 'His']);
+const ARTICLES = words(['A', 'An', 'The']);
+const PARTICIPLES = words([
+  'Building', 'Looking', 'Turning', 'Moving', 'Diving',
+  'Examining', 'Exploring', 'Considering', 'Reflecting',
+]);
+const PREPOSITIONS = words(['on', 'at', 'to', 'into', 'beyond', 'upon', 'in', 'back']);
+const ATTRIBUTORS = words(['experts', 'researchers', 'analysts', 'critics', 'observers']);
+const ATTR_VERBS = words(['say', 'believe', 'argue', 'suggest', 'warn', 'contend', 'predict']);
+
 export const REGEX_PATTERNS: RegexPattern[] = [
   { ...trope('countdown_pattern', 'sentence_structure'),
     regex: /(?:^|[.!?]\s+)Not\s+[^.!?]{3,60}[.!?]\s*Not\s+[^.!?]{3,60}[.!?]\s*(?:Just|Simply|Only|But)\s+/gim },
   { ...trope('rhetorical_self_qa', 'sentence_structure'),
-    regex: /(?:^|[.!?]\s+)(?:The|This|That|Their|Its|His|Her)\s+\w+(?:\s+\w+)?\?\s+(?:A|An|The|It's|It\s+is)\s+[^.!?]{3,60}[.!?]/gim },
+    regex: new RegExp(`(?:^|[.!?]\\s+)${DETERMINERS}\\s+\\w+\\?\\s+${ARTICLES}\\s+[^.!?]{3,60}[.!?]`, 'gim') },
   { ...trope('despite_challenges', 'composition'),
-    regex: /\b(?:despite\s+(?:its|these|the|this|those|their)\s+(?:challenges|limitations|shortcomings|flaws|issues|drawbacks|imperfections|problems|weaknesses|concerns))/gi },
+    regex: /\bdespite\s+(?:its|these?|th(?:is|ose|eir))\s+(?:challenges|limitations|shortcomings|flaws|issues|drawbacks|problems|weaknesses)/gi },
   { ...trope('participle_openings', 'sentence_structure'),
-    regex: /(?:^|[.!?]\s+)(?:Building|Looking|Turning|Moving|Shifting|Diving|Examining|Exploring|Considering|Reflecting|Digging|Stepping|Zooming|Pulling|Peeling|Circling)\s+(?:on|at|to|into|beyond|upon|in|back|deeper|further)\b/gim },
+    regex: new RegExp(`(?:^|[.!?]\\s+)${PARTICIPLES}\\s+${PREPOSITIONS}\\b`, 'gim') },
   { ...trope('false_ranges', 'sentence_structure'),
-    regex: /\bfrom\s+(?:[a-z]+\s+){1,4}to\s+(?:[a-z]+\s+){1,4}(?:and\s+(?:everything|everyone|anything|all)\s+(?:in\s+between|else))/gi },
+    regex: /\bfrom\s+(?:[a-z]+\s+){1,4}to\s+(?:[a-z]+\s+){1,4}and\s+(?:everything|all)\s+in\s+between/gi },
   { ...trope('vague_attributions', 'tone'),
-    regex: /\b(?:experts|researchers|scientists|analysts|critics|observers|insiders|commentators|industry\s+leaders)\s+(?:say|believe|argue|suggest|note|point\s+out|contend|warn|agree|predict|estimate|report)\b/gi },
+    regex: new RegExp(`\\b${ATTRIBUTORS}\\s+${ATTR_VERBS}\\b`, 'gi') },
 ];
 
 // ============================================================
@@ -156,5 +171,5 @@ export const SHORT_FRAGMENT_WORD_LIMIT = 6;
 export const SHORT_FRAGMENT_DENSITY_THRESHOLD = 0.25;
 
 // Tricolon abuse: "X, Y, and Z" patterns
-export const TRICOLON_REGEX = /\b\w+(?:\s+\w+){0,3},\s+\w+(?:\s+\w+){0,3},\s+and\s+\w+(?:\s+\w+){0,3}\b/gi;
+export const TRICOLON_REGEX = /\b\w+(?:\s+\w+){0,2},\s+\w+(?:\s+\w+){0,2},\s+and\s+\w+/gi;
 export const TRICOLON_DENSITY_THRESHOLD: StatThreshold = { ...trope('tricolon_abuse', 'sentence_structure'), threshold: 6.0 };
